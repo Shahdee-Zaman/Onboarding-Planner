@@ -17,8 +17,12 @@ def test_workflow_runs_planner_then_executor(
     dummy_executor_llm,
     sample_plan,
     caplog,
+    monkeypatch,
 ) -> None:
     """The workflow should call the planner once and the executor once per task."""
+
+    # Mock input to prevent blocking on human tasks during integration test
+    monkeypatch.setattr("builtins.input", lambda prompt: "")
 
     planner = PlannerAgent(llm=dummy_planner_llm)
     executor = ExecutorAgent(llm=dummy_executor_llm)

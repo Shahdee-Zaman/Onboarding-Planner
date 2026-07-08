@@ -68,12 +68,13 @@ class ExecutorAgent:
         logger.info("executor start")
         
         if task.task_type == TaskType.HUMAN:
-            logger.info("Skipping human task, generating manual artifact.")
+            logger.info("Pausing for human task completion.")
+            input(f"Task requires supervisor action: {task.name}. Press Enter when completed to continue.")
             artifact = Artifact(
                 task_id=task.id,
                 artifact_type="manual_review",
-                value="This task is marked as HUMAN. It has been listed for a supervisor to review and complete manually.",
-                metadata={"status": "pending_supervisor_review"}
+                value=f"This task is marked as HUMAN. The supervisor confirmed that they completed the action: {task.name}.",
+                metadata={"status": "completed"}
             )
             logger.info("executor finish (human task)")
             return artifact

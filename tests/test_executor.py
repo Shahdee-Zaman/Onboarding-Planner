@@ -57,3 +57,32 @@ def test_executor_wraps_llm_failures(sample_task) -> None:
             task=sample_task,
             user_request="Onboard a new warehouse supervisor.",
         )
+
+
+def test_executor_prompts_on_human_task(
+    dummy_executor_llm,
+    sample_tasks,
+    monkeypatch,
+    caplog,
+) -> None:
+    """The executor should pause, prompt the user, and return a completed artifact for HUMAN tasks."""
+
+    human_task = sample_tasks[1]
+    
+    # Mock input to return instantly and capture the prompt string
+    prompt_calls = []
+    monkeypatch.setattr("builtins.input", lambda prompt: prompt_calls.append(prompt))
+    
+    executor = ExecutorAgent(llm=dummy_executor_llm)
+    with caplog.at_level(logging.INFO):
+        artifact = executor.execute(
+            task=human_task,
+            user_request="Onboard a new warehouse supervisor.",
+        )
+        
+    assert isinstance(artifact, Artifact)
+    assert artifact.task_id == human_task.id
+    assert artifact.metadata["status"] == "completed"
+    assert "Pausing for human task completion." in caplog.text
+    assert len(prompt_calls) == 1
+    assert f"Task requires supervisor action: {human_task.name}." in prompt_calls[0]
